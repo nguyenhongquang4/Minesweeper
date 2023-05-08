@@ -79,7 +79,7 @@ Mix_Chunk *gClick = NULL;
 TTF_Font *gGameOver = NULL;
 TTF_Font *gPlayAgain_win = NULL;
 TTF_Font *gPlayAgain_lose = NULL;
-TTF_Font *gMenu = NULL;
+
 // Screen texture
 LTexture gWinning;
 LTexture gBackground;
@@ -99,6 +99,15 @@ stringstream mineleft;
 int boardmine[row_table][column_table];
 // showing table
 int board[row_table][column_table];
+//create menu
+LTexture gMenu;
+LTexture gMenuColor;
+LTexture gMenu1;
+LTexture gMenu1Color;
+LTexture gThemeMenu;
+bool gStart = false;
+bool isMenuShowing = true;
+bool quit = false;
 
 LTexture::LTexture()
 {
@@ -418,6 +427,27 @@ bool loadMedia()
             success = false;
         }
     }
+     SDL_Color textColor = {255, 255, 255};
+    if(!gMenu.loadfromtextfile("Start Game", textColor))
+    {
+        cout << "Failed to load Start Game font" << endl;
+        success = false;
+    }
+    if(!gMenu1.loadfromtextfile("Exit", textColor))
+    {
+        cout << "Failed to load Exit font" << endl;
+    }
+    SDL_Color textColor_1 = {255, 0, 255};
+    if(!gMenuColor.loadfromtextfile("Start Game", textColor_1))
+    {
+        cout << "Failed to load Start Game font color" << endl;
+        success = false;
+    }
+    if(!gMenu1Color.loadfromtextfile("Exit", textColor_1))
+    {
+        cout << "Failed to load Exit font color"  << endl;
+        success = false;
+    }
 
     //Load image
      if(!gBackground.loadfromfile("C:/Users/Admin/OneDrive/Pictures/background.png"))
@@ -471,6 +501,89 @@ bool loadMedia()
         success = false;
     }
     return success;
+}
+
+bool loadMenuMedia()
+{
+    bool success = true;
+    if(!gThemeMenu.loadfromfile("C:/Users/Admin/OneDrive/Pictures/Minesweeper.png"))
+    {
+        cout << "Failed to load background menu texture" << endl;
+        success = false;
+    }
+    return success;
+}
+
+void createMenu()
+{
+    gThemeMenu.render(-10, -10);
+    gMenu.render(500, 360);
+    gMenu1.render(500, 420);
+    SDL_RenderPresent(gRenderer);
+}
+void showMenu()
+{
+    bool start = false;
+    bool exit = false;
+    SDL_Event e;
+    createMenu();
+    while(isMenuShowing)
+    {
+        while(SDL_PollEvent(&e)!=0)
+        {
+            if(e.type == SDL_QUIT)
+            {
+                quit = true;
+                isMenuShowing = false;
+            }
+            if(e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEMOTION)
+            {
+                int x, y;
+                SDL_GetMouseState(&x, &y);
+                if(x>500 && x < 500+gMenu.getWidth() && y>360 && y< 360+gMenu.getHeight())
+                {
+                    start = true;
+                }
+                else start = false;
+
+                if(x>500 && x< 500+gMenu1.getWidth() && y>420 && y< 420+ gMenu1.getHeight())
+                {
+                    exit = true;
+                }
+                else exit = false;
+                if(e.type == SDL_MOUSEBUTTONDOWN)
+                   {
+                       if(e.button.button == SDL_BUTTON_LEFT)
+                        {
+                            if(start == true)
+                            {
+                                gStart = true;
+                                isMenuShowing = false;
+                            }
+                            if(exit == true)
+                            {
+                                quit = true;
+                                isMenuShowing = false;
+                            }
+                        }
+                   }
+                   if(e.type == SDL_MOUSEMOTION)
+                   {
+                       if(start == true)
+                       {
+                           gMenuColor.render(500, 360);
+                       }
+                       else gMenu.render(500, 360);
+                       if(exit == true)
+                       {
+                           gMenu1Color.render(500, 420);
+                       }
+                       else gMenu1.render(500, 420);
+                   }
+            }
+            SDL_RenderPresent(gRenderer);
+        }
+    }
 }
 
 void createTableWithMine()
@@ -632,7 +745,7 @@ int main(int argc, char* args[])
         }
         else
         {
-            bool quit = false;
+            if(loadMenuMedia()) showMenu();
             SDL_Event e;
             while(!quit)
             {
